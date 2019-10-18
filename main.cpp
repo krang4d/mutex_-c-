@@ -18,14 +18,18 @@ public:
     }
     void push_(int i)
     {
-        lock_guard<mutex> guard_1(mut_1);
+        unique_lock<mutex> ul(mut_1); //, defer_lock);
+        //mut_1.lock();
         ll.push_back(i);
+        //mut_1.unlock();
     }
     int pop_()
     {
-        lock_guard<mutex> guard_1(mut_1);
+        unique_lock<mutex> ul(mut_1); //, defer_lock);
+        //mut_1.lock();
         int i = ll.front();
         ll.pop_front();
+        //mut_1.unlock();
         return i;
     }
 
@@ -99,8 +103,10 @@ std::list<int> read_tl(ThList &tl)
 static mutex mut_2;
 void print(string &&ss)
 {
-    lock_guard<mutex> guard_1(mut_2);
+    unique_lock<mutex> ul(mut_2); //, defer_lock);
+    //mut_2.lock();
     std::cout << ss << std::endl;
+    //mut_2.unlock();
 }
 
 int main()
