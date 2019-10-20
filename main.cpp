@@ -48,7 +48,6 @@ public:
     int pop_()
     {
         unique_lock<mutex> ul(mut_1, defer_lock);
-
         mut_1.lock();
         if (ll.size() == 0) throw ThListIsEmpty();
         int i = ll.front();
