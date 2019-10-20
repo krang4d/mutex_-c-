@@ -6,8 +6,30 @@
 #include <clocale>
 #include <string>
 #include <sstream>
+#include <exception>
 
 using namespace std;
+
+static auto start = chrono::high_resolution_clock::now();
+
+class ThListIsEmpty : public exception
+{
+public:
+    ThListIsEmpty()
+    {
+    }
+    virtual ~ThListIsEmpty() override {}
+
+    // exception interface
+public:
+    virtual const char *what() const noexcept override;
+};
+
+const char *ThListIsEmpty::what() const noexcept
+{
+    return "ThListIsEmpty";
+}
+
 
 class ThList
 {
@@ -26,7 +48,10 @@ public:
     int pop_()
     {
         unique_lock<mutex> ul(mut_1, defer_lock);
+
         mut_1.lock();
+        std::string("asdf");
+        if (ll.size() == 0) throw ThListIsEmpty();
         int i = ll.front();
         ll.pop_front();
         mut_1.unlock();
@@ -35,7 +60,7 @@ public:
 
     bool isEmpty_()
     {
-        return ll.size() != 0 ? false : true;
+        return ll.size() == 0 ? true : false;
     }
 
     size_t len_()
@@ -47,7 +72,7 @@ public:
     {
         string str;
         std::cout << "thList::print() ";
-        if(right.ll.size() == 0) return os << "is empty" << std::endl;
+        if(right.isEmpty_()) return os << "is empty" << std::endl;
         for(auto &value : right.ll)  {
 
            str += std::to_string(value) + " ";
@@ -67,10 +92,13 @@ void write_tl(ThList &tl)
     print("=============Write thread started============\n");
     for(int i = 0; i < 1000; i++)
     {
+        auto now_ = chrono::high_resolution_clock::now();
+        chrono::duration<float> dur = now_ - start;
         std::stringstream ss;
         ss << "Write_Thread_ID:"<<this_thread::get_id() << ", "
                   << "Write " << i << ", "
-                  << "Len: " << tl.len_() << std::endl;
+                  << "Len: " << tl.len_() << ", "
+                  << "Count: " << dur.count() << std::endl;
         print(ss.str());
         tl.push_(i);
     }
@@ -86,12 +114,15 @@ std::list<int> read_tl(ThList &tl)
 
     while(!tl.isEmpty_())
     {
+        auto now_ = chrono::high_resolution_clock::now();
+        chrono::duration<float> dur = now_ - start;
         int i = tl.pop_();
         buff.push_back(i);
         std::stringstream ss;
         ss << "Read_Thread_ID:"<<this_thread::get_id() << ", "
                   << "Value is " << i << ", "
-                  << "Len: " << tl.len_() << std::endl;
+                  << "Len: " << tl.len_() << ", "
+                  << "Count: " << dur.count() << std::endl;
         //this_thread::sleep_for(std::chrono::milliseconds(300));
         print(ss.str());
         this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -115,6 +146,12 @@ int main()
 
     ThList tl;
 
+    try {
+        tl.pop_();
+    } catch (std::exception &exp) {
+        std::cout << exp.what() << std::endl;
+    }
+
     std::cout << "Threads " << thread::hardware_concurrency() << ", "
               << "Main thread ID: " << this_thread::get_id() << std::endl;
 
@@ -136,9 +173,14 @@ int main()
             break;
         }
         else
+        {
             std::cout << *it << ", ";
-        it++;
+            it++;
+        }
     }
+    auto stop = chrono::high_resolution_clock::now();
+    chrono::duration<float> dur = stop - start;
+    std::cout << "time: " << dur.count() << std::endl;
 
     return 0;
 }
